@@ -1,58 +1,46 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { connect } from 'amqplib';
-import { NewsService } from './news.service';
+import { connect, Connection, Channel } from 'amqplib';
 
 @Injectable()
 export class RabbitMqListener {
-    private readonly logger = new Logger(RabbitMqListener.name);
+    private logger = new Logger(RabbitMqListener.name);
+    private connection: Connection;
+    private channel: Channel;
 
-    constructor(private readonly newsService: NewsService) {
-        this.setupConsumer();
+    constructor() {
+        this.setupConsumerWithRetry();
     }
 
-    async setupConsumer() {
-        try {
-            const connection = await connect('amqp://guest:guest@rabbitmq:5672');
-            const channel = await connection.createChannel();
+    async setupConsumerWithRetry() {
+        const maxRetries = 10;
+        let attempts = 0;
 
-            await channel.assertExchange('news_exchange', 'topic', { durable: false });
-            await channel.assertQueue('news_queue', { durable: false });
-            await channel.bindQueue('news_queue', 'news_exchange', 'news.items');
+        while (attempts < maxRetries) {
+            try {
+                this.connection = await connect('amqp://guest:guest@rabbitmq:5672');
+                this.channel = await this.connection.createChannel();
+                await this.channel.assertExchange('news_exchange', 'topic', { durable: false });
+                await this.channel.assertQueue('news_queue', { durable: false });
+                await this.channel.bindQueue('news_queue', 'news_exchange', 'news.items');
 
-            channel.consume('news_queue', async (msg) => {
-                if (msg) {
-                    const content = msg.content.toString();
-                    this.logger.log(`Received message: ${content}`);
-                    try {
-                        const newsItem = JSON.parse(content);
-                        // Basic validation
-                        if (!this.validateNewsItem(newsItem)) {
-                            this.logger.error('Invalid news item schema:', content);
-                        } else {
-                            await this.newsService.addNewsItem(newsItem);
-                            // Notify WebSocket clients
-                            // (We could inject the gateway, or call service to do so)
-                        }
-                    } catch (error) {
-                        this.logger.error('Error parsing news item:', error);
-                    }
-                    channel.ack(msg);
+                this.channel.consume('news_queue', (msg) => {
+                    // Handle the message...
+                    this.channel.ack(msg);
+                });
+
+                this.logger.log('RabbitMQ consumer initialized successfully');
+                return; // success, exit the retry loop
+            } catch (err) {
+                attempts++;
+                this.logger.error(`RabbitMQ connection error (attempt ${attempts}): ${err.message}`);
+                if (attempts < maxRetries) {
+                    this.logger.log('Retrying in 3 seconds...');
+                    await new Promise((res) => setTimeout(res, 3000));
+                } else {
+                    this.logger.error('Max retries reached. Could not connect to RabbitMQ.');
+                    // Decide if you want to process.exit(1) or keep the app running in partial mode
                 }
-            });
-
-            this.logger.log('RabbitMQ consumer initialized');
-        } catch (error) {
-            this.logger.error('RabbitMQ connection error:', error);
+            }
         }
-    }
-
-    validateNewsItem(item: any): boolean {
-        return (
-            typeof item.title === 'string' &&
-            typeof item.content === 'string' &&
-            typeof item.category === 'string' &&
-            typeof item.timestamp === 'string' &&
-            Array.isArray(item.keywords)
-        );
     }
 }

@@ -1,0 +1,48 @@
+.app-container {
+  margin: 2rem;
+  font-family: Arial, sans-serif;
+
+  h1 {
+    margin-bottom: 1.5rem;
+  }
+
+  .news-card {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      margin-bottom: 0.75rem;
+    }
+
+    .timestamp {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #666;
+    }
+  }
+}
+
+/* Example category color styling */
+.technology {
+  color: blue;
+}
+
+.business {
+  color: brown;
+}
+
+.world {
+  color: red;
+}
+
+.science {
+  color: green;
+}

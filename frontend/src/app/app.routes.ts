@@ -6,7 +6,7 @@ import { NewsFeedComponent } from './components/news-feed/news-feed.component';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/news',
     pathMatch: 'full'
   },
   {

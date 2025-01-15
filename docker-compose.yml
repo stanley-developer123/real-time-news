@@ -1,0 +1,46 @@
+services:
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # Python news generator
+  news-generator:
+    build: ./news-generator
+    container_name: news-generator
+    depends_on:
+      - rabbitmq
+    environment:
+      OPENAI_API_KEY: "5590093627:AAFCXSDZjQ864Rqz963C-9TNnI_u5X8hCqE"
+
+  # NestJS backend
+  nest-backend:
+    build: ./backend
+    container_name: backend
+    depends_on:
+      - rabbitmq
+      - redis
+    ports:
+      - "3000:3000"
+
+  # Angular frontend
+  angular-frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - nest-backend
+    ports:
+      - "8080:80"

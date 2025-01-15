@@ -9,4 +9,4 @@ RUN npm install
 RUN npm run build
 
 EXPOSE 3000
-CMD ["npm", "run", "start:prod"]
+CMD ["sh", "-c", "sleep 5 && node dist/main"]
