@@ -24,7 +24,8 @@ services:
     depends_on:
       - rabbitmq
     environment:
-      OPENAI_API_KEY: "5590093627:AAFCXSDZjQ864Rqz963C-9TNnI_u5X8hCqE"
+    # I don't have an OpenAI API key, so please add one here if you have
+      OPENAI_API_KEY: ""
 
   # NestJS backend
   nest-backend:
