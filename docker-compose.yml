@@ -19,6 +19,7 @@ services:
 
   # Python news generator
   news-generator:
+    image: stanleydeveloper/news-generator:latest
     build: ./news-generator
     container_name: news-generator
     depends_on:
@@ -29,6 +30,7 @@ services:
 
   # NestJS backend
   nest-backend:
+    image: stanleydeveloper/nest-backend:latest
     build: ./backend
     container_name: backend
     depends_on:
@@ -39,6 +41,7 @@ services:
 
   # Angular frontend
   angular-frontend:
+    image: stanleydeveloper/angular-frontend:latest
     build: ./frontend
     container_name: frontend
     depends_on:

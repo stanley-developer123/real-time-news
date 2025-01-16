@@ -30,7 +30,8 @@ A scalable application that generates, processes, and displays simulated news it
 2. **Start the services:**
 
    ```bash
-   docker-compose up --build
+   docker-compose pull
+   docker-compose up
    ```
 3. **Access the services:**
 
