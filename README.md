@@ -18,6 +18,7 @@ A scalable application that generates, processes, and displays simulated news it
 
 - **Docker:** [Install Docker](https://www.docker.com/get-started)
 - **Docker Compose:** [Install Docker Compose](https://docs.docker.com/compose/install/)
+- Make sure the docker engine is running!
 
 ### Installation
 
