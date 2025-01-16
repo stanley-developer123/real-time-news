@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NewsSocketService } from './services/news-socket.service';
 import { NewsItem } from '../types';
 import { CommonModule } from '@angular/common';
+import { ChartComponent } from './components/chart/chart.component';
+import { NewsWebSocketService } from './services/news-socket.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule],
+  imports: [CommonModule, ChartComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -14,7 +15,7 @@ export class AppComponent implements OnInit {
   newsItems: NewsItem[] = [];
 
   constructor(
-    private newsSocketService: NewsSocketService,
+    private newsSocketService: NewsWebSocketService,
   ) { }
 
   ngOnInit(): void {
@@ -22,17 +23,18 @@ export class AppComponent implements OnInit {
     this.loadExistingNews();
 
     // 2) Subscribe to real-time updates (Socket.IO)
-    this.newsSocketService.onNewItem().subscribe((item: NewsItem) => {
-      this.newsItems.push(item);
-      // Example: keep only the last 20 items
-      if (this.newsItems.length > 20) {
-        this.newsItems.shift();
+    this.newsSocketService.getNewsStream().subscribe({
+      next: (items: NewsItem[]) => {
+
+        this.newsItems = items
+
       }
+
     });
   }
 
   loadExistingNews(): void {
-    this.newsItems = this.newsSocketService.getLatestNewsSnapshot();
+    this.newsItems = []
   }
 
   // Utility function to display "time since publication"

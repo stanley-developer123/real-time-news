@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
-import { NewsService, NewsItem } from './news.service';
+import { NewsService } from './news.service';
+import { NewsItem } from 'src/types';
 
 @ApiTags('news')
 @Controller('api/news')

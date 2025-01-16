@@ -8,5 +8,6 @@ import { NewsController } from './news.controller';
     imports: [],
     providers: [NewsService, RabbitMqListener, NewsGateway],
     controllers: [NewsController],
+    exports: [NewsService]
 })
 export class NewsModule { }

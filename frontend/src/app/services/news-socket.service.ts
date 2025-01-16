@@ -1,61 +1,66 @@
-// src/app/core/services/news-socket.service.ts
-
+// news.service.ts
 import { Injectable } from '@angular/core';
-import { io, Socket } from 'socket.io-client';
-import { Observable } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { Observable, BehaviorSubject, retry, share } from 'rxjs';
 import { NewsItem } from '../../types';
-import { environment } from '../../environments/environment';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
-export class NewsSocketService {
-  private socket: Socket;
-  private latestNews: NewsItem[] = [];
+export class NewsWebSocketService {
+  // We use BehaviorSubject to maintain the latest state of our news items
+  private newsItems = new BehaviorSubject<NewsItem[]>([]);
+
+  // Our WebSocket connection
+  private socket$: WebSocketSubject<any>;
 
   constructor() {
-    // Connect to your Socket.IO server (NestJS or otherwise)
-    this.socket = io(environment.socketUrl, {
-      transports: ['websocket', 'polling'],
+    // Initialize the WebSocket connection
+    this.socket$ = webSocket({
+      url: 'ws://localhost:3000/news',
+      // Automatically reconnect if connection is lost
+      openObserver: {
+        next: () => {
+          console.log('WebSocket connected');
+          this.loadInitialData();
+        }
+      }
     });
 
-    // 1) Upon connecting, request the initial 'latest news'
-    this.socket.on('connect', () => {
-      // Option A: ask the server explicitly
-      this.socket.emit('requestLatestNews');
-
-      // Option B: maybe your server automatically emits 'latestNews'
-      // in which case you might not need this 'emit'.
-    });
-
-    // 2) Listen for the full 'latest news' array
-    //    which the server should send in response to 'requestLatestNews'
-    //    or automatically upon connection.
-    this.socket.on('latestNews', (data: NewsItem[]) => {
-      this.latestNews = data;
-    });
-  }
-
-  /**
-   * Returns an Observable that will emit **new** items
-   * whenever the server broadcasts a `newsItem` event.
-   */
-  onNewItem(): Observable<NewsItem> {
-    return new Observable((subscriber) => {
-      this.socket.on('newsItem', (item: NewsItem) => {
-        subscriber.next(item);
+    // Subscribe to incoming messages
+    this.socket$
+      .pipe(
+        // Retry connection if it fails
+        retry({ delay: 1000 }),
+        // Share the connection across multiple subscribers
+        share()
+      )
+      .subscribe({
+        next: (message) => this.handleMessage(message),
+        error: (err) => console.error('WebSocket error:', err),
+        complete: () => console.log('WebSocket connection closed')
       });
-    });
   }
 
-  /**
-   * Returns the most recent "latest news" snapshot that
-   * was previously emitted by the server and stored here.
-   * (This is typically the last 20 items, or however many
-   * the server decides to send on connection.)
-   */
-  getLatestNewsSnapshot(): NewsItem[] {
-    // Return a copy so external code doesn't mutate our array
-    return [...this.latestNews];
+  // Load initial data when connection is established
+  private async loadInitialData() {
+    try {
+      const response = await fetch('http://localhost:3000/api/news');
+      const initialNews = await response.json();
+      this.newsItems.next(initialNews);
+    } catch (error) {
+      console.error('Failed to load initial news:', error);
+    }
+  }
+
+  private handleMessage(message: NewsItem) {
+    // Update our BehaviorSubject with the new item
+    const currentNews = this.newsItems.getValue();
+    this.newsItems.next([message, ...currentNews].slice(0, 20));
+  }
+
+  // Public method to get the Observable stream of news items
+  getNewsStream(): Observable<NewsItem[]> {
+    return this.newsItems.asObservable();
   }
 }

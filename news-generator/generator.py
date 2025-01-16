@@ -58,6 +58,7 @@ def generate_news_item():
     title = f"{category} Update {random.randint(1, 1000)}"
     content = generate_ai_content(category)
     keywords = random.sample(KEYWORDS, k=random.randint(1, len(KEYWORDS)))
+    timestamp = datetime.datetime.now().isoformat()
 
     return {
         "title": title,
@@ -69,7 +70,7 @@ def generate_news_item():
 
 
 def connect_to_rabbit():
-    for attempt in range(10):
+    for attempt in range(15):
         try:
             return pika.BlockingConnection(
                 pika.ConnectionParameters(
@@ -82,7 +83,7 @@ def connect_to_rabbit():
             print(
                 f"RabbitMQ not ready, retrying in 3s (attempt {attempt + 1})...")
             time.sleep(3)
-    raise Exception("Could not connect to RabbitMQ after 10 attempts")
+    raise Exception("Could not connect to RabbitMQ after 15 attempts")
 
 
 def main():

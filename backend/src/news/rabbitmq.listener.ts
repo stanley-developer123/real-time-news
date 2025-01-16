@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { connect, Connection, Channel } from 'amqplib';
+import { NewsService } from './news.service';
+import { NewsGateway } from './news.gateway';
 
 @Injectable()
 export class RabbitMqListener {
@@ -7,7 +9,10 @@ export class RabbitMqListener {
     private connection: Connection;
     private channel: Channel;
 
-    constructor() {
+    constructor(
+        private newsService: NewsService,
+        private newsGateway: NewsGateway
+    ) {
         this.setupConsumerWithRetry();
     }
 
@@ -23,13 +28,28 @@ export class RabbitMqListener {
                 await this.channel.assertQueue('news_queue', { durable: false });
                 await this.channel.bindQueue('news_queue', 'news_exchange', 'news.items');
 
-                this.channel.consume('news_queue', (msg) => {
-                    // Handle the message...
-                    this.channel.ack(msg);
+                this.channel.consume('news_queue', async (msg) => {
+                    if (msg) {
+                        try {
+                            const newsItem = JSON.parse(msg.content.toString());
+                            this.logger.debug('Received news item: ' + JSON.stringify(newsItem));
+
+                            // Store in Redis
+                            await this.newsService.addNewsItem(newsItem);
+
+                            // Broadcast to websocket clients
+                            this.newsGateway.broadcastNewItem(newsItem);
+
+                            this.channel.ack(msg);
+                        } catch (error) {
+                            this.logger.error('Error processing message:', error);
+                            this.channel.nack(msg);
+                        }
+                    }
                 });
 
                 this.logger.log('RabbitMQ consumer initialized successfully');
-                return; // success, exit the retry loop
+                return;
             } catch (err) {
                 attempts++;
                 this.logger.error(`RabbitMQ connection error (attempt ${attempts}): ${err.message}`);
@@ -38,7 +58,6 @@ export class RabbitMqListener {
                     await new Promise((res) => setTimeout(res, 3000));
                 } else {
                     this.logger.error('Max retries reached. Could not connect to RabbitMQ.');
-                    // Decide if you want to process.exit(1) or keep the app running in partial mode
                 }
             }
         }
