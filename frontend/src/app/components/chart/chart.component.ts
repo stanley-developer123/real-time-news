@@ -1,22 +1,30 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
 import { BaseChartDirective } from 'ng2-charts';
 import {
   Chart,
   BarController,
   CategoryScale,
   LinearScale,
-  BarElement
+  BarElement,
+  LineController,
+  PointElement,
+  LineElement,
+  ChartConfiguration
 } from 'chart.js';
+import { NewsItem } from '../../../types';
+import { NewsService } from '../../services/news.service';
 
 Chart.register(
   BarController,
   CategoryScale,
   LinearScale,
-  BarElement
+  BarElement,
+  LineController,
+  PointElement,
+  LineElement
 );
+
 @Component({
   selector: 'app-chart',
   templateUrl: './chart.component.html',
@@ -24,23 +32,70 @@ Chart.register(
   imports: [CommonModule, BaseChartDirective]
 })
 export class ChartComponent implements OnInit {
-  public chartLabels: string[] = [];
-  public chartData: number[] = [];
-  public chartType: string = 'bar';
+  @ViewChild(BaseChartDirective) categoryChart?: BaseChartDirective;
+  @ViewChild('keywordChart') keywordChart?: BaseChartDirective;
 
-  constructor(private http: HttpClient) { }
+  newsItems: NewsItem[] = [];
 
+  chartData: ChartConfiguration['data'] = {
+    labels: [],
+    datasets: [{
+      data: [],
+      label: 'News Items by Category',
+      backgroundColor: 'rgba(54, 162, 235, 0.5)',
+      borderColor: 'rgb(54, 162, 235)',
+      borderWidth: 1
+    }]
+  };
+
+
+
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  };
+
+  constructor(private newsService: NewsService, private cdr: ChangeDetectorRef) {
+    this.newsService.getNewsStream().subscribe(items => {
+      this.newsItems = items;
+      this.processDataForChart();
+      setTimeout(() => {
+        this.categoryChart?.chart?.update();
+        this.keywordChart?.chart?.update();
+      }, 0);
+    });
+  }
   ngOnInit() {
-    this.loadStats();
+    // Initial process
+    this.processDataForChart();
+
+    // Subscribe to updates
+    this.newsService.getNewsStream().subscribe({
+      next: (items: NewsItem[]) => {
+        this.newsItems = items;
+        this.processDataForChart();
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  loadStats() {
-    this.http.get<any>('http://localhost:3000/api/news/stats').subscribe(
-      (stats) => {
-        this.chartLabels = Object.keys(stats);
-        this.chartData = Object.values(stats);
-      },
-      (err) => console.error(err)
-    );
+  processDataForChart() {
+    const categoryCount = this.newsItems.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    this.chartData.labels = Object.keys(categoryCount);
+    this.chartData.datasets[0].data = Object.values(categoryCount);
+
+    this.categoryChart?.chart?.update();
   }
+
 }

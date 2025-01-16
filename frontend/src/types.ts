@@ -5,3 +5,7 @@ export interface NewsItem {
   timestamp: string;
   keywords: string[];
 }
+
+
+export const NEWS_CATEGORIES = ["Technology", "Business", "World", "Science"]
+export type NewsCategory = typeof NEWS_CATEGORIES[number];

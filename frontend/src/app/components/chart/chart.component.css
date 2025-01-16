@@ -1,0 +1,16 @@
+.grid-container {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.chart-box {
+  height: 400px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,13 +1,13 @@
-// news.service.ts
 import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Observable, BehaviorSubject, retry, share } from 'rxjs';
 import { NewsItem } from '../../types';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class NewsWebSocketService {
+export class NewsService {
   // We use BehaviorSubject to maintain the latest state of our news items
   private newsItems = new BehaviorSubject<NewsItem[]>([]);
 
@@ -17,7 +17,7 @@ export class NewsWebSocketService {
   constructor() {
     // Initialize the WebSocket connection
     this.socket$ = webSocket({
-      url: 'ws://localhost:3000/news',
+      url: environment.socketUrl,
       // Automatically reconnect if connection is lost
       openObserver: {
         next: () => {
@@ -45,7 +45,7 @@ export class NewsWebSocketService {
   // Load initial data when connection is established
   private async loadInitialData() {
     try {
-      const response = await fetch('http://localhost:3000/api/news');
+      const response = await fetch(environment.apiUrl);
       const initialNews = await response.json();
       this.newsItems.next(initialNews);
     } catch (error) {

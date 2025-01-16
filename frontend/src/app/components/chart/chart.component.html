@@ -1,5 +1,8 @@
-<div style="display: block;">
-  <canvas [type]="'bar'" baseChart [datasets]="[{ data: chartData, label: 'Count by Category' }]"
-    [labels]="chartLabels">
-  </canvas>
+<div style=" margin: auto; display: grid; grid-template-columns: 1fr ; gap: 1rem; width: 100%;">
+  <div class="card" style="height: auto; width: 40vw; margin: auto;">
+    <h3 class="text-lg font-semibold mb-2">News Items by Category</h3>
+    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'bar'">
+    </canvas>
+  </div>
+
 </div>

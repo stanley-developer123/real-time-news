@@ -1,1 +1,37 @@
-<p>news-feed works!</p>
+<div class="card" style=" margin: 0 auto">
+  <!-- Custom tabs navigation -->
+  <div class="tabs-container">
+    <button class="tab-button" [class.active]="activeTab === 'all'" (click)="setActiveTab('all')">
+      All
+    </button>
+    <button *ngFor="let category of categories" class="tab-button" [class.active]="activeTab === category"
+      (click)="setActiveTab(category)">
+      {{ category }}
+    </button>
+  </div>
+
+  <!-- Tab content -->
+  <div class="tab-content">
+    <div *ngFor="let item of filteredNewsItems" class="card my-3">
+      <div class="card-body">
+        <h5 class="card-title">{{ item.title }}</h5>
+        <p class="card-text">{{ item.content }}</p>
+        <span [ngStyle]="{
+            'color':
+              item.category === 'Technology'
+                ? 'blue'
+                : item.category === 'Science'
+                ? 'green'
+                : item.category === 'World'
+                ? 'red'
+                : 'gray'
+          }">
+          {{ item.category }}
+        </span>
+        <small class="text-muted float-end">
+          {{ timeSince(item.timestamp) }}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

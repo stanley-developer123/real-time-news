@@ -1,26 +1,7 @@
-<div class="container mt-5">
-  <h1>Real-Time AI News Feed</h1>
-  <app-chart></app-chart>
-
-  <div *ngFor="let item of newsItems" class="card my-3">
-    <div class="card-body">
-      <h5 class="card-title">{{ item.title }}</h5>
-      <p class="card-text">{{ item.content }}</p>
-      <span [ngStyle]="{
-            'color':
-              item.category === 'Technology'
-                ? 'blue'
-                : item.category === 'Science'
-                ? 'green'
-                : item.category === 'World'
-                ? 'red'
-                : 'gray'
-          }">
-        {{ item.category }}
-      </span>
-      <small class="text-muted float-end">
-        {{ timeSince(item.timestamp) }}
-      </small>
-    </div>
+<div class="container mt-5" style=" max-width: 1000px;">
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <h1>Real-Time AI News Feed</h1>
+    <app-chart></app-chart>
+    <app-news-feed></app-news-feed>
   </div>
 </div>

@@ -1,7 +1,5 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
-import { ChartComponent } from './components/chart/chart.component';
-import { NewsFeedComponent } from './components/news-feed/news-feed.component';
+import { AppComponent } from './app.component';
 
 export const routes: Routes = [
   {
@@ -10,15 +8,11 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'charts',
-    component: ChartComponent
-  },
-  {
     path: 'news',
-    component: NewsFeedComponent
+    component: AppComponent
   },
   {
     path: '**',
-    redirectTo: '/dashboard'
+    redirectTo: '/news'
   }
 ];
